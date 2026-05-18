@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASME/API 안전 밸브 계산기</title>
+    <!-- 구글 폰트 적용 (모던한 느낌의 Inter 폰트) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+/* 기본 변수 설정 (다크모드 & 글래스모피즘 기반) */
+:root {
+    --bg-color: #0f172a; /* 어두운 네이비 배경 */
+    --text-color: #f8fafc; /* 밝은 텍스트 */
+    --text-muted: #94a3b8;
+    --primary-color: #3b82f6; /* 파란색 포인트 */
+    --primary-hover: #2563eb;
+    --glass-bg: rgba(30, 41, 59, 0.7); /* 반투명 배경 */
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --input-bg: rgba(15, 23, 42, 0.6);
+    --accent-color: #10b981; /* 강조색 (녹색) */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    /* 배경에 은은한 그라데이션 적용 */
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+    background-attachment: fixed;
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.app-container {
+    max-width: 900px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* 글래스모피즘 공통 클래스 */
+.glass-header, .glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: var(--glass-shadow);
+    padding: 2rem;
+}
+
+.glass-header {
+    text-align: center;
+}
+
+.glass-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, #60a5fa, #34d399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.glass-header p {
+    color: var(--text-muted);
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+@media (min-width: 768px) {
+    .main-content {
+        grid-template-columns: 1.2fr 1fr;
+    }
+}
+
+/* 폼 스타일링 */
+h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #cbd5e1;
+}
+
+input, select {
+    background-color: var(--input-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-color);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.calc-btn {
+    width: 100%;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin-top: 1rem;
+}
+
+.calc-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+.calc-btn:active {
+    transform: scale(0.98);
+}
+
+/* 결과 패널 스타일링 */
+.result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.result-card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.result-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+.result-card h3 {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.result-card p {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.result-card p span {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.highlight {
+    color: var(--accent-color);
+    font-size: 2rem !important;
+}
+
+/* 애니메이션/가시성 토글 용 클래스 */
+.hidden {
+    display: none !important;
+}
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 헤더 영역 -->
+        <header class="glass-header">
+            <h1>ASME / API Safety Relief Valve Calculator</h1>
+            <p>배출 용량 및 오리피스 면적 계산 (Gas/Steam)</p>
+        </header>
+
+        <main class="main-content">
+            <!-- 입력 폼 영역 -->
+            <section class="input-section glass-panel">
+                <h2>입력 파라미터 (Input Parameters)</h2>
+                <form id="calc-form">
+                    <div class="form-group">
+                        <label for="fluid-type">유체 종류 (Fluid Type)</label>
+                        <select id="fluid-type" name="fluidType">
+                            <option value="gas">가스 (Gas)</option>
+                            <option value="steam">증기 (Steam)</option>
+                        </select>
+                    </div>
+
+                    <!-- 설정 압력 -->
+                    <div class="form-group">
+                        <label for="set-pressure">설정 압력 (Set Pressure, psig)</label>
+                        <input type="number" id="set-pressure" step="0.1" placeholder="예: 100" required>
+                    </div>
+
+                    <!-- 배압 -->
+                    <div class="form-group">
+                        <label for="back-pressure">배압 (Back Pressure, psig)</label>
+                        <input type="number" id="back-pressure" step="0.1" placeholder="예: 10" required>
+                    </div>
+
+                    <!-- 온도 -->
+                    <div class="form-group">
+                        <label for="temperature">온도 (Temperature, °F)</label>
+                        <input type="number" id="temperature" step="0.1" placeholder="예: 60" required>
+                    </div>
+
+                    <!-- 요구 배출량 -->
+                    <div class="form-group">
+                        <label for="flow-rate">요구 배출량 (Required Flow Rate, lb/hr 또는 SCFM)</label>
+                        <input type="number" id="flow-rate" step="0.1" placeholder="예: 5000" required>
+                    </div>
+                    
+                    <!-- 분자량 (가스인 경우) -->
+                    <div class="form-group gas-only">
+                        <label for="molecular-weight">분자량 (Molecular Weight, M)</label>
+                        <input type="number" id="molecular-weight" step="0.1" placeholder="예: 28.96 (Air)">
+                    </div>
+
+                    <!-- 비열비 (가스인 경우) -->
+                    <div class="form-group gas-only">
+                        <label for="specific-heat-ratio">비열비 (Specific Heat Ratio, k)</label>
+                        <input type="number" id="specific-heat-ratio" step="0.01" placeholder="예: 1.4">
+                    </div>
+
+                    <button type="submit" class="calc-btn">계산하기 (Calculate)</button>
+                </form>
+            </section>
+
+            <!-- 결과 표시 영역 -->
+            <section class="result-section glass-panel">
+                <h2>계산 결과 (Results)</h2>
+                <div class="result-grid">
+                    <div class="result-card">
+                        <h3>요구 오리피스 면적</h3>
+                        <p id="res-area">-- <span>in²</span></p>
+                    </div>
+                    <div class="result-card">
+                        <h3>API 526 표준 오리피스</h3>
+                        <p id="res-orifice-letter" class="highlight">--</p>
+                    </div>
+                    <div class="result-card">
+                        <h3>선택된 표준 면적</h3>
+                        <p id="res-std-area">-- <span>in²</span></p>
+                    </div>
+                    <div class="result-card">
+                        <h3>배출 용량 (Rated Capacity)</h3>
+                        <p id="res-capacity">--</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+/**
+ * ASME / API Safety Relief Valve Calculator Logic
+ * 교육용 및 초기 버전: API 520 임계 유동(Critical Flow) 공식을 기반으로 작성되었습니다.
+ */
+
+// DOM 요소 선택
+const form = document.getElementById('calc-form');
+const fluidTypeSelect = document.getElementById('fluid-type');
+const gasOnlyFields = document.querySelectorAll('.gas-only');
+
+// 결과 표시 DOM
+const resArea = document.getElementById('res-area');
+const resOrificeLetter = document.getElementById('res-orifice-letter');
+const resStdArea = document.getElementById('res-std-area');
+const resCapacity = document.getElementById('res-capacity');
+
+/**
+ * 유체 종류에 따라 입력 필드 토글 (가스/증기)
+ */
+fluidTypeSelect.addEventListener('change', (e) => {
+    const isSteam = e.target.value === 'steam';
+    gasOnlyFields.forEach(field => {
+        // 증기일 경우 분자량, 비열비 입력창을 숨김 (스팀은 고정값 사용)
+        if (isSteam) {
+            field.classList.add('hidden');
+        } else {
+            field.classList.remove('hidden');
+        }
+    });
+});
+
+/**
+ * API 526 표준 오리피스 문자 및 면적 (단위: in²)
+ * D부터 T까지의 표준 오리피스 데이터입니다.
+ */
+const API_526_ORIFICES = [
+    { letter: 'D', area: 0.110 },
+    { letter: 'E', area: 0.196 },
+    { letter: 'F', area: 0.307 },
+    { letter: 'G', area: 0.503 },
+    { letter: 'H', area: 0.785 },
+    { letter: 'J', area: 1.287 },
+    { letter: 'K', area: 1.838 },
+    { letter: 'L', area: 2.853 },
+    { letter: 'M', area: 3.60 },
+    { letter: 'N', area: 4.34 },
+    { letter: 'P', area: 6.38 },
+    { letter: 'Q', area: 11.05 },
+    { letter: 'R', area: 16.00 },
+    { letter: 'T', area: 26.00 }
+];
+
+/**
+ * 계산된 요구 면적보다 크거나 같은 가장 작은 표준 오리피스를 찾습니다.
+ * @param {number} requiredArea - 계산된 요구 오리피스 면적
+ * @returns {Object|null} 매칭된 표준 오리피스 객체 또는 null (T 초과 시)
+ */
+function findStandardOrifice(requiredArea) {
+    for (let i = 0; i < API_526_ORIFICES.length; i++) {
+        if (API_526_ORIFICES[i].area >= requiredArea) {
+            return API_526_ORIFICES[i];
+        }
+    }
+    return null; // 요구 면적이 T 오리피스보다 큰 경우
+}
+
+/**
+ * 폼 제출(Submit) 시 계산 로직 실행
+ */
+form.addEventListener('submit', (e) => {
+    e.preventDefault(); // 페이지 새로고침 방지
+
+    // 1. 사용자 입력값 가져오기
+    const fluidType = fluidTypeSelect.value;
+    const setPressure = parseFloat(document.getElementById('set-pressure').value); // psig
+    const backPressure = parseFloat(document.getElementById('back-pressure').value); // psig
+    const tempF = parseFloat(document.getElementById('temperature').value); // °F
+    const flowRate = parseFloat(document.getElementById('flow-rate').value); // lb/hr
+
+    // 절대 온도 (°R) = °F + 460
+    const tempR = tempF + 460;
+    
+    // 절대 압력 계산 (psig -> psia)
+    // Overpressure(과압)는 일반적으로 ASME Section VIII에서 10%를 적용합니다.
+    const overpressure = 1.1; 
+    const atmosphericPressure = 14.7;
+    // P1 (Relieving Pressure) = Set Pressure * 1.1 + 대기압
+    const p1 = (setPressure * overpressure) + atmosphericPressure;
+
+    // 배출 계수 (Coefficient of Discharge) - API 표준값
+    const Kd = 0.975;
+    
+    // 계산된 요구 오리피스 면적 변수
+    let A = 0;
+
+    if (fluidType === 'gas') {
+        // [ 가스 (Gas) 계산 공식 - API 520 임계 유동 ]
+        // A = (W / (C * Kd * P1 * Kb * Kc)) * sqrt((T * Z) / M)
+        
+        // 사용자가 값을 입력하지 않으면 기본값으로 공기(Air) 특성 사용
+        const mInput = document.getElementById('molecular-weight').value;
+        const kInput = document.getElementById('specific-heat-ratio').value;
+        
+        const M = mInput ? parseFloat(mInput) : 28.96; // 분자량 (기본 공기)
+        const k = kInput ? parseFloat(kInput) : 1.4;   // 비열비 (기본 공기)
+        
+        // 기체 상수 C 계산 (k값에 의존)
+        // C = 520 * sqrt(k * (2/(k+1))^((k+1)/(k-1)))
+        const exponent = (k + 1) / (k - 1);
+        const C = 520 * Math.sqrt(k * Math.pow(2 / (k + 1), exponent));
+        
+        // 압축계수(Z)와 기타 보정계수(Kb, Kc)는 교육 목적상 1.0으로 가정합니다.
+        const Z = 1.0;
+        const Kb = 1.0; 
+        const Kc = 1.0;
+
+        // 면적(A) 계산
+        const numerator = flowRate * Math.sqrt(tempR * Z);
+        const denominator = C * Kd * p1 * Kb * Kc * Math.sqrt(M);
+        A = numerator / denominator;
+
+    } else if (fluidType === 'steam') {
+        // [ 증기 (Steam) 계산 공식 - API 520 ASME Section VIII ]
+        // A = W / (51.5 * P1 * Kd * Kb * Kc * Kn)
+        
+        const Kb = 1.0; 
+        const Kc = 1.0;
+        const Kn = 1.0; // Napier 증기 보정 계수 (포화증기 기준 단순화)
+
+        const denominator = 51.5 * p1 * Kd * Kb * Kc * Kn;
+        A = flowRate / denominator;
+    }
+
+    // 2. 표준 오리피스 매칭
+    const orifice = findStandardOrifice(A);
+
+    // 3. 배출 용량 (Rated Capacity) 역산
+    // 표준 면적을 구한 후, 해당 면적으로 실제 얼마만큼 배출 가능한지 계산합니다.
+    let ratedCapacity = 0;
+    let stdArea = 0;
+
+    if (orifice) {
+        stdArea = orifice.area;
+        // 요구 면적에 대한 배출량 비율을 이용해 배출 용량 계산
+        // Rated Capacity = (Std Area / Required Area) * Required Flow Rate
+        ratedCapacity = (stdArea / A) * flowRate;
+    }
+
+    // 4. 결과 화면에 표시
+    resArea.innerHTML = `${A.toFixed(4)} <span>in²</span>`;
+    
+    if (orifice) {
+        resOrificeLetter.innerText = orifice.letter;
+        resStdArea.innerHTML = `${stdArea.toFixed(3)} <span>in²</span>`;
+        resCapacity.innerHTML = `${ratedCapacity.toFixed(1)} <span>lb/hr</span>`;
+    } else {
+        resOrificeLetter.innerText = "초과";
+        resStdArea.innerHTML = "해당 없음";
+        resCapacity.innerHTML = "여러 개의 밸브 필요";
+    }
+});
+    </script>
+</body>
+</html>

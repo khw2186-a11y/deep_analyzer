@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>염욕 질화 데이터 관리 대시보드</title>
+    <!-- 고급스러운 폰트 'Inter'를 구글 폰트에서 불러옵니다 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* [1] 전체 기본 설정: 다크 모드 기반의 프리미엄 디자인 */
+        :root {
+            --bg-color: #0f172a; /* 어두운 남색 배경 */
+            --card-bg: rgba(30, 41, 59, 0.7); /* 반투명한 카드 배경 (글래스모피즘) */
+            --primary: #38bdf8; /* 네온 블루 (포인트 색상) */
+            --primary-hover: #0ea5e9; 
+            --text-main: #f8fafc; /* 밝은 흰색 글자 */
+            --text-muted: #94a3b8; /* 회색 글자 */
+            --border-color: rgba(255, 255, 255, 0.1);
+            --danger: #ef4444; /* 삭제 버튼 색상 */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        /* [2] 메인 컨테이너 (레이아웃) */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 2fr; /* 왼쪽 폼(1), 오른쪽 표(2) 비율 */
+            gap: 30px;
+        }
+
+        /* 반응형: 화면이 좁아지면 위아래로 배치 */
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* [3] 카드 스타일 (글래스모피즘 효과) */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        /* [4] 입력 폼 스타일 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color);
+            color: white;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+        .row > div {
+            flex: 1;
+        }
+
+        /* [5] 버튼 스타일 */
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary);
+            color: #0f172a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px); /* 살짝 위로 뜨는 효과 */
+            box-shadow: 0 5px 15px rgba(56, 189, 248, 0.4);
+        }
+
+        button.btn-delete {
+            background-color: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 8px 12px;
+            width: auto;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        button.btn-delete:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        /* [6] 표(테이블) 스타일 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        td {
+            font-size: 0.95rem;
+        }
+
+        /* 암호화 표시용 텍스트 효과 */
+        .encrypted-text {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #10b981; /* 해커 느낌의 초록색 */
+            letter-spacing: 2px;
+        }
+
+        /* 데이터가 없을 때 표시할 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 헤더 영역 -->
+    <h1>염욕 질화 데이터 매니저</h1>
+    <p class="subtitle">Salt Bath Nitriding Test Database System (Local Edition)</p>
+
+    <div class="container">
+        
+        <!-- [왼쪽 구역] 데이터 입력 폼 -->
+        <div class="card">
+            <h2>새 테스트 결과 등록</h2>
+            <form id="dataForm">
+                
+                <div class="form-group">
+                    <label for="material">테스트 재질</label>
+                    <select id="material" required>
+                        <option value="SS 304">SS 304 (오스테나이트계)</option>
+                        <option value="SS 316">SS 316 (오스테나이트계, 내식성 우수)</option>
+                        <option value="SS 321H">SS 321H (고온 강도 강화)</option>
+                        <option value="SS 410">SS 410 (마르텐사이트계)</option>
+                        <option value="SS 420">SS 420 (고탄소 마르텐사이트계)</option>
+                        <option value="SS 431">SS 431 (기계적 성질 우수)</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label for="temp">처리 온도 (℃)</label>
+                        <input type="number" id="temp" value="580" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="time">처리 시간 (분)</label>
+                        <input type="number" id="time" value="120" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label for="hardness">표면 경도 (Hv)</label>
+                        <input type="number" step="0.01" id="hardness" placeholder="예: 1050.5" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dimension">치수 변화 (mm)</label>
+                        <input type="number" step="0.0001" id="dimension" placeholder="예: 0.0025" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label for="friction">마찰 계수</label>
+                        <input type="number" step="0.0001" id="friction" placeholder="예: 0.150" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tester">측정자 이름 (보안)</label>
+                        <input type="text" id="tester" placeholder="예: 홍길동" required>
+                    </div>
+                </div>
+
+                <button type="submit">데이터 저장하기</button>
+            </form>
+        </div>
+
+        <!-- [오른쪽 구역] 데이터 목록 테이블 -->
+        <div class="card">
+            <h2>저장된 측정 데이터 목록</h2>
+            <div style="overflow-x: auto;">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>작업일자</th>
+                            <th>재질</th>
+                            <th>공정 조건</th>
+                            <th>경도(Hv)</th>
+                            <th>치수변화(mm)</th>
+                            <th>마찰계수</th>
+                            <th>측정자 (보안)</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- 자바스크립트로 데이터가 여기에 자동으로 들어갑니다 -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyMessage" class="empty-state">
+                아직 저장된 데이터가 없습니다. 왼쪽 폼에서 등록해 주세요.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- [JavaScript] 프로그램 동작 로직 -->
+    <script>
+        // 1. 페이지가 켜지면 브라우저 저장소(localStorage)에서 기존 데이터를 불러옵니다.
+        // 데이터가 없으면 빈 배열([])을 준비합니다.
+        let testDataList = JSON.parse(localStorage.getItem('nitridingData')) || [];
+
+        // 화면 요소들을 가져옵니다.
+        const form = document.getElementById('dataForm');
+        const tableBody = document.getElementById('tableBody');
+        const emptyMessage = document.getElementById('emptyMessage');
+
+        // 2. 이름 암호화 흉내내기 함수 (교육 목적)
+        // 실제 데이터베이스에서는 pgcrypto를 쓰지만, 여기서는 글자를 별표로 가리는 효과를 줍니다.
+        function fakeEncryptName(name) {
+            if (!name) return "";
+            // 첫 글자만 남기고 나머지는 별표(*) 처리
+            return name.charAt(0) + '*'.repeat(name.length - 1) + " (Secured)";
+        }
+
+        // 3. 데이터를 화면(표)에 그려주는 함수
+        function renderTable() {
+            // 표 안의 내용을 일단 싹 지웁니다.
+            tableBody.innerHTML = '';
+
+            // 데이터가 없으면 안내 문구를 띄우고 끝냅니다.
+            if (testDataList.length === 0) {
+                emptyMessage.style.display = 'block';
+                return;
+            }
+            
+            // 데이터가 있으면 안내 문구를 숨깁니다.
+            emptyMessage.style.display = 'none';
+
+            // 저장된 데이터 목록을 하나씩 돌면서 표에 줄(tr)을 추가합니다.
+            testDataList.forEach((data, index) => {
+                const tr = document.createElement('tr');
+                
+                tr.innerHTML = `
+                    <td>${data.date}</td>
+                    <td><strong>${data.material}</strong></td>
+                    <td>${data.temp}℃ / ${data.time}분</td>
+                    <td style="color: var(--primary); font-weight: bold;">${data.hardness}</td>
+                    <td>${data.dimension}</td>
+                    <td>${data.friction}</td>
+                    <td><span class="encrypted-text">${fakeEncryptName(data.tester)}</span></td>
+                    <td>
+                        <button class="btn-delete" onclick="deleteData(${index})">삭제</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // 4. '데이터 저장하기' 버튼을 눌렀을 때 실행되는 함수
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // 페이지가 새로고침 되는 것을 막습니다.
+
+            // 현재 날짜 구하기 (예: 2026-05-05)
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+
+            // 폼에 입력된 값들을 모아서 하나의 덩어리(객체)로 만듭니다.
+            const newData = {
+                date: dateStr,
+                material: document.getElementById('material').value,
+                temp: document.getElementById('temp').value,
+                time: document.getElementById('time').value,
+                hardness: document.getElementById('hardness').value,
+                dimension: document.getElementById('dimension').value,
+                friction: document.getElementById('friction').value,
+                tester: document.getElementById('tester').value // 서버에 보낼 땐 여기서 평문 전송 후 DB에서 암호화
+            };
+
+            // 목록의 맨 앞에 새 데이터를 추가합니다.
+            testDataList.unshift(newData);
+
+            // 브라우저 저장소(localStorage)에 문자열로 변환해서 영구 저장합니다.
+            localStorage.setItem('nitridingData', JSON.stringify(testDataList));
+
+            // 입력 폼 초기화 (비우기)
+            form.reset();
+            // 기본값은 다시 세팅해줍니다.
+            document.getElementById('temp').value = "580";
+            document.getElementById('time').value = "120";
+
+            // 화면을 다시 그립니다.
+            renderTable();
+        });
+
+        // 5. '삭제' 버튼을 눌렀을 때 실행되는 함수
+        function deleteData(index) {
+            if(confirm('정말로 이 기록을 삭제하시겠습니까?')) {
+                // 해당 순번의 데이터를 목록에서 1개 빼냅니다.
+                testDataList.splice(index, 1);
+                
+                // 바뀐 목록을 다시 로컬 저장소에 덮어씁니다.
+                localStorage.setItem('nitridingData', JSON.stringify(testDataList));
+                
+                // 화면을 다시 그립니다.
+                renderTable();
+            }
+        }
+
+        // 6. 페이지가 처음 켜졌을 때 즉시 화면을 그립니다.
+        renderTable();
+
+    </script>
+</body>
+</html>
