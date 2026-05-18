@@ -620,10 +620,23 @@ with col_main:
             gp_row = qi.loc['Gross Profit'] if 'Gross Profit' in qi.index else None
             ni_row = qi.loc['Net Income'] if 'Net Income' in qi.index else None
             if rev_row is not None:
+                # Pandas Series 혹은 중복 인덱스로 인해 리턴된 다중 값을 단일 float로 강제 변환해 주는 안전장치
+                def to_scalar(val):
+                    if hasattr(val, 'iloc'):
+                        val = val.iloc[0] if len(val) > 0 else 0
+                    elif isinstance(val, (list, tuple)):
+                        val = val[0] if len(val) > 0 else 0
+                    try:
+                        import math
+                        f_val = float(val)
+                        return f_val if not math.isnan(f_val) and not math.isinf(f_val) else 0.0
+                    except:
+                        return 0.0
+
                 for col in qi.columns[:12]:
-                    r = rev_row[col] if rev_row is not None else 0
-                    g = gp_row[col] if gp_row is not None else 0
-                    n = ni_row[col] if ni_row is not None else 0
+                    r = to_scalar(rev_row[col]) if rev_row is not None else 0
+                    g = to_scalar(gp_row[col]) if gp_row is not None else 0
+                    n = to_scalar(ni_row[col]) if ni_row is not None else 0
                     margin_val = (g/r*100) if r and r != 0 else 0
                     rows_data.append({
                         '분기': f"{col.year} Q{col.quarter}" if hasattr(col,'quarter') else str(col)[:10],

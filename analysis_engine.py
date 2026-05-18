@@ -269,6 +269,10 @@ def fetch_company_overview(ticker):
                 # 칼럼 날짜 역순(최신순) 정렬 및 최근 12개로 제한
                 sorted_cols = sorted(q_income.columns, reverse=True)[:12]
                 q_income = q_income[sorted_cols]
+                
+                # 🚨 극강의 인덱스 중복 제거 장치 장착 (Pandas ValueError 철통 방어)
+                q_income = q_income[~q_income.index.duplicated(keep='first')]
+                
                 print(f"[analysis_engine] {ticker_upper} 일반 종목 12분기 재무제표 수학적 보간/팽창 완료. 칼럼 개수: {len(q_income.columns)}")
                 
             except Exception as ex:
