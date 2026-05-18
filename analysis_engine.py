@@ -218,8 +218,25 @@ def fetch_company_overview(ticker):
                     if si not in q_income.index:
                         q_income.loc[si] = 0.0
                 
-                # 12분기를 채우기 위해 칼럼이 부족할 경우 보간 처리
-                if len(q_income.columns) < 12:
+                # 실질적으로 유효한 매출 수치가 들어있는 칼럼의 개수를 파악하여 NaN 기만 우회 방지
+                valid_rev_count = 0
+                if 'Total Revenue' in q_income.index:
+                    try:
+                        valid_rev_count = sum(1 for c in q_income.columns if pd.notna(q_income.loc['Total Revenue', c]) and float(q_income.loc['Total Revenue', c]) != 0.0)
+                    except:
+                        valid_rev_count = 0
+                
+                # 12분기를 채우기 위해 칼럼이 부족하거나 실질 유효 데이터 칼럼이 12개 미만일 경우 보간 처리 강제 실행!
+                if len(q_income.columns) < 12 or valid_rev_count < 12:
+                    # NaN이나 0.0만 들고 있는 쓸모없는 칼럼들을 전격 제외하여 유효 칼럼만 필터링
+                    if 'Total Revenue' in q_income.index:
+                        try:
+                            valid_cols = [c for c in q_income.columns if pd.notna(q_income.loc['Total Revenue', c]) and float(q_income.loc['Total Revenue', c]) != 0.0]
+                            if valid_cols:
+                                q_income = q_income[valid_cols]
+                        except:
+                            pass
+                            
                     current_cols = list(q_income.columns)
                     # Timestamp 형식으로 보장
                     current_cols = [pd.Timestamp(c) for c in current_cols]
@@ -976,8 +993,24 @@ def fetch_earnings_data(ticker, av_api_key=""):
                 if 'Diluted EPS' not in q_inc.index:
                     q_inc.loc['Diluted EPS'] = 0.0
                 
-                # 12분기 칼럼 확보 및 보간
-                if len(q_inc.columns) < 12:
+                # 실질적으로 유효한 EPS 수치가 들어있는 칼럼의 개수를 파악하여 NaN 기만 우회 방지
+                valid_eps_count = 0
+                if 'Diluted EPS' in q_inc.index:
+                    try:
+                        valid_eps_count = sum(1 for c in q_inc.columns if pd.notna(q_inc.loc['Diluted EPS', c]) and float(q_inc.loc['Diluted EPS', c]) != 0.0)
+                    except:
+                        valid_eps_count = 0
+                
+                # 12분기 칼럼 확보 및 보간 강제 집행!
+                if len(q_inc.columns) < 12 or valid_eps_count < 12:
+                    if 'Diluted EPS' in q_inc.index:
+                        try:
+                            valid_cols = [c for c in q_inc.columns if pd.notna(q_inc.loc['Diluted EPS', c]) and float(q_inc.loc['Diluted EPS', c]) != 0.0]
+                            if valid_cols:
+                                q_inc = q_inc[valid_cols]
+                        except:
+                            pass
+                            
                     current_cols = [pd.Timestamp(c) for c in q_inc.columns]
                     q_inc.columns = current_cols
                     oldest_col = min(current_cols) if current_cols else pd.Timestamp.now()
