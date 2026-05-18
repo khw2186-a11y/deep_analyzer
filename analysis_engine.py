@@ -192,15 +192,24 @@ def fetch_company_overview(ticker):
                     q_income = pd.DataFrame(index=standard_indices, columns=dates).fillna(0.0)
                 
                 # 인덱스 맵핑 (Total Revenue, Gross Profit, Net Income 이 index에 없으면 유사어 찾아서 표준화)
+                # 인덱스 맵핑 (Total Revenue, Gross Profit, Net Income 이 index에 없으면 유사어 찾아서 표준화)
+                # 'Cost Of Revenue' 등 매출원가가 'Total Revenue'로 오염되는 것을 원천 차단하기 위해 엄격한 매핑 규칙 적용
                 rename_map = {}
                 for idx in q_income.index:
-                    idx_lower = str(idx).lower().replace(' ', '').replace('_', '')
-                    if 'totalrevenue' in idx_lower or 'revenue' in idx_lower:
+                    idx_str = str(idx).strip()
+                    idx_lower = idx_str.lower().replace(' ', '').replace('_', '')
+                    
+                    # 1) 매출 (Total Revenue) - cost, expense 가 들어간 것은 배제
+                    if idx_lower in ['totalrevenue', 'revenue', 'operatingrevenue', 'salesrevenue', 'sales'] or \
+                       (('revenue' in idx_lower or 'sales' in idx_lower) and 'cost' not in idx_lower and 'expense' not in idx_lower):
                         rename_map[idx] = 'Total Revenue'
-                    elif 'grossprofit' in idx_lower:
+                    # 2) 총이익 (Gross Profit)
+                    elif idx_lower in ['grossprofit', 'grossmargin']:
                         rename_map[idx] = 'Gross Profit'
-                    elif 'netincome' in idx_lower:
+                    # 3) 순이익 (Net Income)
+                    elif idx_lower in ['netincome', 'netincomecommonstockholders', 'netincomeapplicabletocommonshares']:
                         rename_map[idx] = 'Net Income'
+                
                 if rename_map:
                     q_income = q_income.rename(index=rename_map)
                 
@@ -280,6 +289,19 @@ def fetch_company_overview(ticker):
 
         if is_fact_injected:
             print(f"[analysis_engine] {ticker_upper} 최근 12분기 역사적 재무 데이터프레임 초정밀 주입 성공!")
+
+        # 🚨 [모든 종목 공통 실행] 데이터프레임의 날짜 칼럼 타입 불일치(Timestamp Mismatch) 및 중복 인덱스 최종 박멸 필터
+        if q_income is not None and not q_income.empty:
+            try:
+                # 칼럼 이름을 무조건 pd.Timestamp로 변환
+                q_income.columns = [pd.Timestamp(c) for c in q_income.columns]
+                # 중복 인덱스 안전 필터
+                q_income = q_income[~q_income.index.duplicated(keep='first')]
+                # 최신 날짜 역순 정렬 및 최근 12개 분기 제한
+                sorted_cols = sorted(q_income.columns, reverse=True)[:12]
+                q_income = q_income[sorted_cols]
+            except Exception as ex:
+                print(f"[analysis_engine] 공통 날짜 Timestamp 변환 및 정렬 필터 실패: {ex}")
 
         # 4) stock.info 차단 대비 펀더멘털 지표 자체 수학적 연산 및 실시간 오버라이드
         
