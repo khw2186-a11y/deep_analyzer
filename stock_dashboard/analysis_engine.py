@@ -746,7 +746,7 @@ def fetch_analyst_data(ticker):
 # -----------------------------------------------------------
 # 4-1. 어닝(EPS) 서프라이즈 데이터 수집 (Alpha Vantage API 연동)
 # -----------------------------------------------------------
-def fetch_earnings_data(ticker, av_api_key=""):
+def fetch_earnings_data(ticker, av_api_key="3SPA4Q3IMIPH6NXK"):
     """분기별 EPS 예상치, 실적, 서프라이즈/미스, 발표일 주가 변동을 수집합니다. (Alpha Vantage API 연동 우선)"""
     earnings_list = []
     
@@ -2096,7 +2096,7 @@ def analyze_options_sentiment(ticker):
 # -----------------------------------------------------------
 # 14. 통합 실행 함수
 # -----------------------------------------------------------
-def run_deep_analysis(ticker, av_api_key=""):
+def run_deep_analysis(ticker, av_api_key="3SPA4Q3IMIPH6NXK"):
     """티커 하나에 대해 전체 분석을 실행합니다."""
     # 1) 기업 정보 (수식 자가 연산 및 세션 충돌 우회 적용)
     overview = fetch_company_overview(ticker)

@@ -86,7 +86,7 @@ ticker_input = st.sidebar.text_input("종목 티커 입력", value=default_ticke
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### ⚙️ API 설정 (어닝 팩트체크용)")
-av_api_key = st.sidebar.text_input("Alpha Vantage API Key", value=st.session_state.get('av_api_key', ''), type="password", help="무료 발급: alphavantage.co (어닝 데이터 100% 팩트 렌더링용)")
+av_api_key = st.sidebar.text_input("Alpha Vantage API Key", value=st.session_state.get('av_api_key', '3SPA4Q3IMIPH6NXK'), type="password", help="무료 발급: alphavantage.co (어닝 데이터 100% 팩트 렌더링용)")
 if av_api_key:
     st.session_state['av_api_key'] = av_api_key
 
