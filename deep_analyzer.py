@@ -42,6 +42,7 @@ import json
 import os
 
 WATCHLIST_FILE = "watchlist.json"
+WATCHLIST_NOTES_FILE = "watchlist_notes.json"
 
 def load_watchlist():
     if os.path.exists(WATCHLIST_FILE):
@@ -59,8 +60,27 @@ def save_watchlist(watchlist):
     except Exception as e:
         st.sidebar.error(f"관심종목 저장 실패: {e}")
 
+def load_watchlist_notes():
+    if os.path.exists(WATCHLIST_NOTES_FILE):
+        try:
+            with open(WATCHLIST_NOTES_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+def save_watchlist_notes(notes_dict):
+    try:
+        with open(WATCHLIST_NOTES_FILE, "w", encoding="utf-8") as f:
+            json.dump(notes_dict, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        st.sidebar.error(f"메모 저장 실패: {e}")
+
 if 'watchlist' not in st.session_state:
     st.session_state['watchlist'] = load_watchlist()
+
+if 'watchlist_notes' not in st.session_state:
+    st.session_state['watchlist_notes'] = load_watchlist_notes()
 
 # 관심종목 핫스왑 분석 함수
 def analyze_selected_ticker(t):
@@ -132,18 +152,37 @@ with wl_col2:
 
 # 관심종목 세로 리스트
 for t in st.session_state['watchlist']:
-    btn_col, del_col = st.sidebar.columns([3, 1])
-    with btn_col:
-        # 원클릭 실시간 포트폴리오 퀀트 분석 핫링크
-        if st.button(f"🎯 {t}", key=f"wl_click_{t}", use_container_width=True):
-            analyze_selected_ticker(t)
-    with del_col:
-        # 삭제 버튼
-        if st.button("🗑️", key=f"wl_del_{t}", use_container_width=True, help=f"{t} 관심종목 삭제"):
-            st.session_state['watchlist'].remove(t)
-            save_watchlist(st.session_state['watchlist'])
-            st.toast(f"🗑️ {t} 삭제 완료!")
-            st.rerun()
+    with st.sidebar.container():
+        btn_col, del_col = st.columns([3, 1])
+        with btn_col:
+            # 원클릭 실시간 포트폴리오 퀀트 분석 핫링크
+            if st.button(f"🎯 {t}", key=f"wl_click_{t}", use_container_width=True):
+                analyze_selected_ticker(t)
+        with del_col:
+            # 삭제 버튼
+            if st.button("🗑️", key=f"wl_del_{t}", use_container_width=True, help=f"{t} 관심종목 삭제"):
+                st.session_state['watchlist'].remove(t)
+                save_watchlist(st.session_state['watchlist'])
+                # 연동된 메모도 함께 삭제 (옵션)
+                if t in st.session_state['watchlist_notes']:
+                    del st.session_state['watchlist_notes'][t]
+                    save_watchlist_notes(st.session_state['watchlist_notes'])
+                st.toast(f"🗑️ {t} 삭제 완료!")
+                st.rerun()
+                
+        memo_col, save_col = st.columns([3, 1])
+        with memo_col:
+            # 메모 입력창 (높이 68px 지정하여 3줄 내외로 콤팩트하게 유지)
+            note_val = st.text_area("메모", value=st.session_state['watchlist_notes'].get(t, ""), key=f"note_input_{t}", height=68, label_visibility="collapsed", placeholder="메모 입력...")
+        with save_col:
+            # 텍스트 에어리어 높이와 대략 맞추기 위해 마진 적용 또는 스타일 없이 사용
+            st.markdown("<div style='margin-top:2px;'></div>", unsafe_allow_html=True)
+            if st.button("💾", key=f"note_save_{t}", use_container_width=True, help="메모 저장"):
+                st.session_state['watchlist_notes'][t] = note_val
+                save_watchlist_notes(st.session_state['watchlist_notes'])
+                st.toast(f"✅ {t} 메모 저장 완료!")
+        
+        st.markdown("<hr style='margin: 8px 0; border-color: #30363D'>", unsafe_allow_html=True)
 
 if 'data' not in st.session_state:
     st.markdown("## 🔬 Deep Dive Stock Analyzer")
