@@ -42,6 +42,7 @@ SECTOR_MAP = {
     '우주': ['RKLB', 'LUNR', 'ASTS', 'SPCE', 'RDW'],
     '양자': ['IONQ', 'RGTI', 'QUBT', 'INFQ'],
     '건설/인프라': ['QXO', 'PWR', 'URI', 'VMC', 'BLDR'],
+    '전력': ['VST'],
     'AI/반도체': ['NVDA', 'PLTR', 'MU', 'ARM', 'TSM', 'SMCI', 'AMD', 'AVGO', 'COHR', 'GLW'],
     '빅테크/모빌리티': ['TSLA', 'GOOGL', 'MSFT', 'AAPL', 'AMZN', 'META', 'RIVN', 'LCID'],
     '소프트웨어/엔터': ['NOW', 'ZETA', 'RBLX', 'TEM'],
