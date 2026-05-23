@@ -151,7 +151,7 @@ with wl_col2:
             st.error("티커 입력")
 
 # 관심종목 세로 리스트
-for t in st.session_state['watchlist']:
+for t in list(st.session_state['watchlist']):
     with st.sidebar.container():
         btn_col, del_col = st.columns([3, 1])
         with btn_col:
@@ -161,7 +161,8 @@ for t in st.session_state['watchlist']:
         with del_col:
             # 삭제 버튼
             if st.button("🗑️", key=f"wl_del_{t}", use_container_width=True, help=f"{t} 관심종목 삭제"):
-                st.session_state['watchlist'].remove(t)
+                if t in st.session_state['watchlist']:
+                    st.session_state['watchlist'].remove(t)
                 save_watchlist(st.session_state['watchlist'])
                 # 연동된 메모도 함께 삭제 (옵션)
                 if t in st.session_state['watchlist_notes']:
