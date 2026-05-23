@@ -768,6 +768,40 @@ with col_main:
         f"</p></div>"
     )
     st.markdown(verdict_html, unsafe_allow_html=True)
+    # --- 증권사 투자의견 (Upgrades & Downgrades) ---
+    upgrades_data = analyst.get('upgrades', [])
+    if upgrades_data:
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("#### 💡 최신 월가 증권사 투자의견 (Upgrades & Downgrades)")
+        
+        cards_html = "<div style='display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;'>"
+        for upg in upgrades_data:
+            action = upg.get('action', '')
+            action_color = '#58A6FF' # default
+            if action == 'up':
+                action_color = '#3FB950' # green
+            elif action == 'down':
+                action_color = '#FF4444' # red
+                
+            cur_t = upg.get('current_target')
+            pri_t = upg.get('prior_target')
+            tgt_str = "🎯 목표가 미제시"
+            if cur_t:
+                tgt_str = f"🎯 ${cur_t}"
+                if pri_t and pri_t > 0 and pri_t != cur_t:
+                    tgt_str = f"🎯 ${pri_t} ➔ <b>${cur_t}</b>"
+            
+            cards_html += f"""
+            <div style='background:#161B22; border:1px solid #30363D; border-radius:8px; padding:10px 15px; min-width:200px; flex:1;'>
+                <div style='font-size:0.8rem; color:#8B949E; margin-bottom:4px;'>{upg.get('date')} | {upg.get('firm')}</div>
+                <div style='font-size:0.95rem; font-weight:bold; color:{action_color}; margin-bottom:4px;'>
+                    {upg.get('from')} ➔ {upg.get('to')}
+                </div>
+                <div style='font-size:0.9rem; color:#C9D1D9;'>{tgt_str}</div>
+            </div>
+            """
+        cards_html += "</div>"
+        st.markdown(cards_html, unsafe_allow_html=True)
 
     # --- 기술적 분석 차트 (하단 배치) ---
     st.markdown('<hr>', unsafe_allow_html=True)

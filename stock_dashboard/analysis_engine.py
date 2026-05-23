@@ -667,6 +667,37 @@ def fetch_analyst_data(ticker):
     try:
         stock = yf.Ticker(ticker)
         buy_count, hold_count, sell_count = 0, 0, 0
+        upgrades_list = []
+
+        # yfinance upgrades_downgrades (최근 투자의견 변경 이력 5건)
+        try:
+            ud_df = stock.upgrades_downgrades
+            if ud_df is not None and not ud_df.empty:
+                ud_df = ud_df.sort_index(ascending=False).head(5)
+                for idx, row in ud_df.iterrows():
+                    action = str(row.get('Action', '')).lower()
+                    firm = str(row.get('Firm', 'N/A'))
+                    to_g = str(row.get('ToGrade', ''))
+                    from_g = str(row.get('FromGrade', ''))
+                    to_g = to_g if to_g and to_g.lower() != 'nan' else '-'
+                    from_g = from_g if from_g and from_g.lower() != 'nan' else '-'
+                    cur_t = row.get('currentPriceTarget')
+                    pri_t = row.get('priorPriceTarget')
+                    cur_tgt = float(cur_t) if pd.notna(cur_t) and cur_t != '' else None
+                    pri_tgt = float(pri_t) if pd.notna(pri_t) and pri_t != '' else None
+                    date_str = str(idx)[:10] if pd.notna(idx) else 'N/A'
+                    
+                    upgrades_list.append({
+                        'date': date_str,
+                        'firm': firm,
+                        'action': action,
+                        'from': from_g,
+                        'to': to_g,
+                        'prior_target': pri_tgt,
+                        'current_target': cur_tgt
+                    })
+        except Exception as e:
+            pass
 
         # yfinance recommendations는 period/strongBuy/buy/hold/sell/strongSell 구조
         recs = None
@@ -738,10 +769,11 @@ def fetch_analyst_data(ticker):
             'hold': hold_count,
             'sell': sell_count,
             'recommendations': recs,
+            'upgrades': upgrades_list,
         }
     except Exception as e:
         print(f"[analysis_engine] 애널리스트 데이터 오류: {e}")
-        return {'buy': 10, 'hold': 5, 'sell': 1, 'recommendations': None}
+        return {'buy': 10, 'hold': 5, 'sell': 1, 'recommendations': None, 'upgrades': []}
 
 # -----------------------------------------------------------
 # 4-1. 어닝(EPS) 서프라이즈 데이터 수집 (Alpha Vantage API 연동)
