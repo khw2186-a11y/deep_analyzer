@@ -37,6 +37,23 @@ section[data-testid="stSidebar"]{background:#0D1117;border-right:1px solid #3036
 .metric-bar{background:#161B22;border:1px solid #30363D;border-radius:6px;padding:8px 16px;text-align:center}
 </style>""", unsafe_allow_html=True)
 
+# === 관심종목 섹터 매핑 ===
+SECTOR_MAP = {
+    '우주': ['RKLB', 'LUNR', 'ASTS', 'SPCE', 'RDW'],
+    '양자': ['IONQ', 'RGTI', 'QUBT'],
+    '건설/인프라': ['QXO', 'PWR', 'URI', 'VMC', 'BLDR'],
+    'AI/반도체': ['NVDA', 'PLTR', 'MU', 'ARM', 'TSM', 'SMCI', 'AMD', 'AVGO', 'COHR', 'GLW'],
+    '빅테크/모빌리티': ['TSLA', 'GOOGL', 'MSFT', 'AAPL', 'AMZN', 'META', 'RIVN', 'LCID'],
+    '소프트웨어/엔터': ['NOW', 'ZETA', 'RBLX', 'TEM', 'INFQ'],
+    '기타': [] # 명시되지 않은 티커는 자동 분류
+}
+
+def get_sector(ticker):
+    for sector, tickers in SECTOR_MAP.items():
+        if ticker in tickers:
+            return sector
+    return '기타'
+
 # === 관심종목(Watchlist) 파일 I/O 헬퍼 ===
 import json
 import os
@@ -150,8 +167,18 @@ with wl_col2:
         else:
             st.error("티커 입력")
 
+# 관심종목 필터링 토글 (드롭다운)
+sector_options = ['전체'] + list(SECTOR_MAP.keys())
+selected_sector = st.sidebar.selectbox("섹터 필터", sector_options, index=0)
+st.sidebar.markdown("<hr style='margin: 8px 0; border-color: #30363D'>", unsafe_allow_html=True)
+
 # 관심종목 세로 리스트
 for t in list(st.session_state['watchlist']):
+    # 섹터 필터 로직 적용
+    t_sector = get_sector(t)
+    if selected_sector != '전체' and t_sector != selected_sector:
+        continue
+        
     with st.sidebar.container():
         btn_col, del_col = st.columns([3, 1])
         with btn_col:
