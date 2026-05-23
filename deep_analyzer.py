@@ -791,15 +791,11 @@ with col_main:
                 if pri_t and pri_t > 0 and pri_t != cur_t:
                     tgt_str = f"🎯 ${pri_t} ➔ <b>${cur_t}</b>"
             
-            cards_html += f"""
-            <div style='background:#161B22; border:1px solid #30363D; border-radius:8px; padding:10px 15px; min-width:200px; flex:1;'>
-                <div style='font-size:0.8rem; color:#8B949E; margin-bottom:4px;'>{upg.get('date')} | {upg.get('firm')}</div>
-                <div style='font-size:0.95rem; font-weight:bold; color:{action_color}; margin-bottom:4px;'>
-                    {upg.get('from')} ➔ {upg.get('to')}
-                </div>
-                <div style='font-size:0.9rem; color:#C9D1D9;'>{tgt_str}</div>
-            </div>
-            """
+            cards_html += f"<div style='background:#161B22; border:1px solid #30363D; border-radius:8px; padding:10px 15px; min-width:200px; flex:1;'>"
+            cards_html += f"<div style='font-size:0.8rem; color:#8B949E; margin-bottom:4px;'>{upg.get('date')} | {upg.get('firm')}</div>"
+            cards_html += f"<div style='font-size:0.95rem; font-weight:bold; color:{action_color}; margin-bottom:4px;'>{upg.get('from')} ➔ {upg.get('to')}</div>"
+            cards_html += f"<div style='font-size:0.9rem; color:#C9D1D9;'>{tgt_str}</div>"
+            cards_html += "</div>"
         cards_html += "</div>"
         st.markdown(cards_html, unsafe_allow_html=True)
 
